@@ -4432,3 +4432,44 @@ a known conservative undercount.
   exact model identity, current in-budget offer, direct seller page, and hard-
   requirement proof must converge in one request. Qualify a provider/retailer
   contract for those fields before another architecture matrix.
+
+## PR-14 canonical-commerce resolution contract (2026-09-01)
+
+- Only unresolved `strong` exact-model targets may enter canonical resolution,
+  in scout consensus order, with an absolute maximum of three targets.
+- Each target may make at most one Google Shopping Light product lookup and one
+  exact-token Google Immersive Product stores lookup. Keep the canonical ceiling
+  at three product searches plus three offer lookups, separately from the
+  unchanged fifteen-logical-Serper ceiling.
+- A provider product ID or immersive token groups current provider data only.
+  It cannot establish ReviewRadar identity, evidence tier, eligibility, or
+  sibling equivalence. Seller title/page identity must exact-match the target;
+  named, numeric, generation, year, kit, and catalog siblings stay isolated.
+- Explicit out-of-stock, sold-out, discontinued, preorder, or unavailable store
+  results must be dropped before candidate creation. Unknown availability is
+  provisional and must pass the existing current-page verification; provider
+  price alone cannot create availability.
+- Do not transfer price, availability, image, commerce signals, product facts,
+  or market evidence across a product token, sibling, retailer, or merchant.
+- Canonical candidates pass the same product type, accessory, new-condition,
+  exact identity, hard-requirement, current availability, trusted USD price,
+  budget, direct-page, merchant, image, duplicate, and SSRF gates as every other
+  candidate. The public response remains the same five fields.
+- Provider ratings, review counts, offer counts, and position are post-gate
+  commerce tie-breakers only. Preserve Bayesian shrinkage so a 5.0 product with
+  one review cannot outrank a well-supported 4.6/1,000-review product solely on
+  raw rating.
+- Use no-cache US requests, bounded timeout, cancellation, and request-only
+  coalescing. Do not add retry loops, background work, prewarming, persistence,
+  or cross-request canonical/product/page caches. Keep the API key server-side,
+  out of logs, and out of cache identity.
+- Missing key, timeout, provider error, invalid output, no exact product, or no
+  usable offer must return deterministic fallback with no quality boost and no
+  second scout or alternate recommender.
+- Current deterministic wall: 358/358 unit tests across 45 suites, typecheck,
+  zero-warning lint, production build, Playwright 7/7, and diff checking.
+- Do not run the frozen matrix until one bounded debug request actually yields
+  a strong target and non-zero canonical product/offer calls. The first three
+  `c829fa4` debug diagnostics all reached scout `provider_error`, produced zero
+  canonical calls, and prove fallback only. The runtime is not live qualified;
+  V20 remains prior baseline evidence, not evidence for the adapter.

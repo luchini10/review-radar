@@ -34,6 +34,7 @@ The production recommendation path performs fresh work inside one POST route:
       -> start one fresh independent market scout
       -> run up to three current neutral Shopping queries concurrently
       -> up to three exact-model Shopping queries for undiscovered strong targets
+      -> up to three canonical product lookups and three bound seller-offer lookups
       -> up to three organic exact-target product-page searches
       -> deterministic type, accessory, used-item, budget, and requirement filters
       -> candidate-local product-page resolution when needed
@@ -113,9 +114,36 @@ page searches and use the remaining request budget for candidate-local product-
 page lookups. It verifies a ranked queue of at most nine candidates in waves of
 three, without repeating discovery. The total logical ceiling remains fifteen.
 There are no retries, editorial queries, review queries, rescue queries, image
-queries, or alternative search providers. Broad requests preserve three unique
+queries, or alternate recommender. Broad requests preserve three unique
 queries by adding brand-neutral `top rated` and `popular models` variants when
 empty budget and priority fields would otherwise collapse discovery.
+
+### Canonical commerce resolution
+
+lib/canonicalCommerce.ts is an optional server-only SerpApi transport for
+unresolved `strong` exact-model targets. For only the first three eligible
+targets, it makes at most one Google Shopping Light request, binds an exact
+returned product identity, and then makes at most one Google Immersive Product
+stores request with `more_stores=true`. Its independent ceiling is three product
+searches plus three offer lookups; it does not consume or expand the fifteen-
+logical-Serper-operation ceiling.
+
+Canonical provider work starts concurrently with existing exact-target Serper
+work after scouting and neutral discovery. Requests are US-bound, no-cache,
+timeout-bounded, cancellation-aware, and coalesced only inside the current
+request. The optional `SERPAPI_API_KEY` remains server-side. A missing key,
+timeout, provider error, malformed result, absent exact match, or unusable offer
+returns no canonical candidate and leaves deterministic fallback unchanged.
+
+A Google product token groups one provider product and its store results; it
+does not establish ReviewRadar identity or leader evidence. Direct seller
+titles and pages must still bind the exact stable model and reject sibling
+variants. Explicit out-of-stock, sold-out, and unavailable stores are removed;
+unknown availability stays provisional until existing page verification. Every
+candidate still passes product type, accessory, condition, identity, hard-
+requirement, availability, trusted USD price, budget, merchant, direct-page,
+image, duplicate, and SSRF gates. Provider ratings and offer counts are only
+post-gate commerce tie-breakers and never public content.
 
 Search calls are timeout-bounded. A map allocated inside the current
 `selectProducts` call coalesces identical work for that request only and is
@@ -238,11 +266,12 @@ checks. ReviewRadar returns null rather than showing a questionable image.
 ## Cancellation, admission, and request-scoped coalescing
 
 The route acquires the shared paid-request admission permit before provider
-work and always releases it. Browser cancellation propagates through the
-market scout, search, and page-fetch boundaries. Shopping and product-page maps
-exist only inside one `selectProducts` invocation, where they coalesce duplicate
-work in that request. They are discarded at return and cannot serve a later
-search. The API response uses `Cache-Control: no-store`.
+work and always releases it. Browser cancellation propagates through the market
+scout, Serper search, canonical-commerce, and page-fetch boundaries. Shopping,
+canonical-commerce, and product-page maps exist only inside one
+`selectProducts` invocation, where they coalesce duplicate work in that request.
+They are discarded at return and cannot serve a later search. The API response
+uses `Cache-Control: no-store`.
 
 ## Main implementation files
 
@@ -254,6 +283,8 @@ search. The API response uses `Cache-Control: no-store`.
 - lib/recommendationRequestValidation.ts — server request validation.
 - lib/requirementExtraction.ts — deterministic structured requirements.
 - lib/marketScout.ts — fresh bounded source-validated exact-model scout.
+- lib/canonicalCommerce.ts — bounded exact-product and direct-seller commerce
+  resolution for unresolved strong targets.
 - lib/productSearch.ts — bounded Shopping and product-page search.
 - lib/productSelection.ts — filtering, page resolution, requirement checks,
   ranking, deduplication, and final selection.
@@ -295,9 +326,20 @@ The request-time architecture and accuracy gates are protected by:
   and the minimal result card;
 - TypeScript, ESLint, and the Next production build.
 
-The current source passes 352/352 unit tests across 44 suites, zero-warning
-lint, typecheck, production build, and Playwright 7/7. A separate live browser
-search passed at desktop and mobile widths with no overflow or console errors.
+The current source at runtime `c829fa4` passes 358/358 unit tests across 45
+suites, zero-warning lint, typecheck, production build, and Playwright 7/7.
+This deterministic wall covers canonical source/token/direct-offer binding,
+exact sibling isolation, availability and unsafe-URL rejection, request-only
+coalescing, failure fallback, cancellation, key-safe cache identity, and the
+three-product/three-offer ceiling.
+
+The latest completed ten-case matrix remains V20 on the earlier `b4e1890`
+runtime; it is prior baseline evidence, not validation of the canonical path.
+Three diverse `c829fa4` debug diagnostics returned HTTP 200 with non-empty
+fallback products, but all three scouts ended in `provider_error` before any
+strong target existed, so canonical product and offer calls remained zero. The
+frozen matrix was not run against that fallback-only state.
+
 The latest PR-14 ten-case, single-attempt V20 matrix completed 10/10
 requests with one OpenAI response each, three hosted searches each, and at most
 fifteen logical Serper operations. Exact evidence binding and product safety

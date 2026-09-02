@@ -18135,3 +18135,85 @@ tree was not accessed. The four previously disclosed incidents remain the
 complete incident list. No push, deployment, release, dependency change,
 production-data action, public-contract change, background work, retained
 research cache, or benchmark retry occurred.
+
+---
+
+## PR-14 canonical-commerce resolver implementation and live gate (2026-09-01)
+
+**Assessment:** deterministic implementation complete at runtime `c829fa4`;
+LIVE GATE NOT EXECUTED and RELEASE FAIL remains. The objective was to improve
+current in-budget leader coverage at the evidence-to-commerce boundary, not to
+make price proximity or provider order look like product quality. The adapter
+adds current exact-product and direct-seller coverage while preserving every
+existing eligibility and evidence authority.
+
+**Provider qualification:** SerpApi was selected because its synchronous Google
+Shopping Light result exposes stable product identity plus rating/review/offer
+metadata and its Google Immersive Product stores result exposes direct seller
+links, prices, availability text, and multiple offers. DataForSEO exposes useful
+product and seller fields but documents a task POST followed by task GET/polling;
+Amazon Business exposes product and offer operations but requires Business
+Product Catalog onboarding and account context. Neither alternative was added.
+
+**Implementation:** only the top three unresolved `strong` exact-model targets
+can enter the optional canonical pipeline. Each uses at most one Shopping Light
+lookup and, after exact model binding, one Immersive Product stores lookup with
+`more_stores=true`. The separate ceiling is three product searches plus three
+offer lookups; Serper remains capped at fifteen logical operations. Calls are
+US-bound, no-cache, timeout-bounded, cancellation-aware, and coalesced only
+inside the request. `SERPAPI_API_KEY` stays server-only and is excluded from
+request cache identity and logging.
+
+The Google product token groups one provider response but never overrides exact
+stable-model identity. Direct offers must bind the target model and continue to
+reject named, numeric, generation, and catalog siblings. Explicitly unavailable
+stores and unsafe/non-HTTP URLs are removed; unknown availability remains
+provisional. Product type, accessory, condition, exact identity, hard
+requirement, availability, trusted USD price, budget, direct page, image,
+duplicate, merchant, and SSRF gates remain authoritative. Missing key, provider
+error, invalid output, absent exact product, or unusable offer returns no
+canonical candidate and no quality boost. The public response is unchanged.
+
+**Deterministic verification:** the full wall passed 358/358 unit tests across
+45 suites, typecheck, zero-warning lint, the Next.js 16.3.3 production build,
+Playwright 7/7 desktop/mobile, and `git diff --check`. Coverage includes source
+and token binding, direct offers, exact sibling isolation, out-of-stock and
+unsafe URL rejection, request-only coalescing, missing-key/provider fallback,
+cancellation, key-safe cache identity, internal provider provenance, actual
+three-product/three-offer orchestration, sparse-rating shrinkage, and the
+unchanged minimal API. The build exposes only `/`, `/_not-found`, and
+`/api/recommendations`.
+
+**Live diagnostics:** one production smoke request returned HTTP 200 and
+products in 11,104 ms without debug telemetry. Three later cache-cold debug
+requests, each attempted once, also returned HTTP 200 and non-empty results:
+
+- robot vacuum: 19,097 ms, scout `provider_error`, 12/12 logical/physical
+  Serper operations, zero canonical product/offer attempts;
+- gaming monitor: 11,644 ms, scout `provider_error`, 12/12 Serper, zero
+  canonical attempts; and
+- coffee maker: 11,843 ms, scout `provider_error`, 12/12 Serper, zero canonical
+  attempts.
+
+These probes prove honest fallback rather than canonical provider behavior.
+All three failed before a strong target existed, so they cannot establish live
+exact binding, seller coverage, leader recall, provider ceilings under work,
+latency, tokens, cost, or payload for `c829fa4`. The shell process did not expose
+`SERPAPI_API_KEY`, but credential state for ordinary Next.js startup remains
+unknown because `.env.local` was not inspected. A full ten-case matrix would
+therefore have measured fallback only and was intentionally not run.
+
+**Decision:** V20 at `b4e1890` remains the authoritative prior live baseline,
+not evidence for the new runtime. Restore a working scout and make the SerpApi
+credential available without inspecting `.env.local`; then require one bounded
+debug request with at least one strong target and non-zero canonical telemetry.
+Only after exact binding, availability filtering, direct seller URLs, and the
+three-plus-three ceiling pass should the precommitted ten-case matrix run once
+with no retries. Do not weaken gates, tune to frozen products, or claim best-in-
+budget reliability while that evidence is absent.
+
+**Boundaries:** `.env.local` was not manually inspected. The protected fixture
+tree was not accessed. The four previously disclosed incidents remain the
+complete incident list. No push, deployment, release, dependency addition,
+production-data action, public-contract change, background work, retained or
+cross-request research cache, or benchmark retry occurred.

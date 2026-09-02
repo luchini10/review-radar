@@ -4,29 +4,36 @@ Updated: 2026-09-01
 
 ## Current phase and exact snapshot
 
-PR-14 request-time market quality is retained at local runtime commit `b4e1890`
-(`Run market scout concurrently with discovery`). The current branch is `main`.
+PR-14 request-time market quality is implemented through local runtime commit
+`c829fa4` (`Add bounded canonical commerce resolution`) on branch `main`.
 Every recommendation request independently starts one fresh market scout beside
-three neutral Shopping searches, then validates and ranks current purchasable
-products. No market plan, Shopping result, product-page result, recommendation,
-or research artifact survives the request that created it.
+three neutral Shopping searches. For at most three unresolved `strong` exact-
+model targets, the selector may then perform bounded canonical product and
+seller-offer resolution before applying the existing deterministic gates.
 
 The public contract remains one `POST /api/recommendations` returning only
 image, name, category, trustworthy current USD price when available, and direct
 product-page URL. No push, deployment, release, production-data action,
 dependency change, public-API change, or card expansion occurred.
 
-V20 remains the strongest measured safe architecture and the authoritative
-retained report. It is **not release-qualified**: frozen-leader top-three recall
-was 5/10 (50%) versus the 80% gate, and cache-cold p95 was 29,646 ms versus the
-25-second gate. Do not describe ReviewRadar as reliably returning the universal
-best product in budget.
+The new canonical-commerce path is deterministic-test complete but **not live
+release-qualified**. Three diverse diagnostic requests returned HTTP 200 and
+non-empty fallback results, but the upstream market scout returned
+`provider_error` before producing any strong target, so the canonical provider
+made zero product or offer calls. The frozen ten-case matrix was intentionally
+not run against that fallback-only state.
+
+V20 at runtime `b4e1890` remains the strongest authoritative live comparison,
+not evidence for `c829fa4`. It reached frozen-leader top-three recall of 5/10
+(50%) versus the 80% gate and cache-cold p95 of 29,646 ms versus the 25-second
+gate. Do not describe ReviewRadar as reliably returning the universal best
+product in budget.
 
 Taylor authorized all in-scope local work and commits for this goal. No further
 phase-approval pause is required. The prohibition on retained, precomputed, or
 background recommendation research remains binding.
 
-## Retained request-time architecture
+## Current request-time architecture
 
 `app/api/recommendations/route.ts` starts exactly one GPT-5.4 Mini Responses
 scout before calling `selectProducts`. `lib/productSelection.ts` immediately
@@ -44,20 +51,34 @@ including a comparative source; `supported` requires one comparative source or
 two recognized editorial domains. Invalid, unavailable, or insufficient
 scouting falls back to neutral discovery with no quality boost.
 
-After neutral discovery, the selector may run up to three exact Shopping target
-searches, three organic strong-target page searches, and candidate-local page
-resolution while preserving the fifteen-logical-Serper-operation ceiling. An
-evidence-bound exact model may retain up to two merchant/page alternatives
-through verification so one unavailable or price-less seller does not erase
-another already discovered seller. Final output still deduplicates to one card
-per product/page identity and preserves brand diversity.
+`lib/canonicalCommerce.ts` is an optional server-only SerpApi adapter. For only
+the top three `strong` exact-model targets not already represented by a direct
+product page, it performs at most one Google Shopping Light lookup, binds the
+exact returned product identity, then performs at most one Google Immersive
+Product seller-store lookup with `more_stores=true`. This is a separate maximum
+of three product searches plus three offer lookups; the existing fifteen-
+logical-Serper-operation ceiling is unchanged.
 
-Editorial, comparison, review, support, and manual URLs are valid only as scout
-evidence. Unknown merchant pages are admissible only when an exact current
-Shopping candidate binds that merchant. Product type, accessory, condition,
-exact identity, hard requirement, availability, trusted USD price, budget,
-direct page, image, duplicate, and SSRF gates remain authoritative. Prices and
-facts never transfer across models or merchants.
+Canonical work starts concurrently with the existing exact-target Serper work
+after neutral discovery and scouting. Provider requests are US-bound, no-cache,
+timeout-bounded, cancellation-aware, and coalesced only inside the current
+request. `SERPAPI_API_KEY` is optional and server-only. A missing key, provider
+error, invalid response, absent exact match, or unusable offer returns no
+canonical candidate and preserves the existing deterministic fallback.
+
+A provider product token groups the current product and store responses; it
+does not establish ReviewRadar identity by itself. Seller titles and pages must
+still bind the exact stable model and reject named, numeric, generation, and
+catalog siblings. Explicit out-of-stock, sold-out, or unavailable stores are
+discarded immediately. Unknown availability remains provisional and must pass
+the existing page verification. Price, availability, facts, and market evidence
+never transfer across products, variants, or merchants.
+
+After neutral discovery, the selector may also run up to three exact Shopping
+target searches, three organic strong-target page searches, and candidate-local
+page resolution. Product type, accessory, condition, exact identity, hard
+requirement, availability, trusted USD price, budget, direct page, image,
+duplicate, merchant, and SSRF gates remain authoritative.
 
 Final ordering is: `strong`, `supported`, unscored; directly supported shopper
 preferences; scout consensus order; Bayesian commerce rating with a 4.0/50
@@ -65,84 +86,102 @@ prior; review and offer volume; page and merchant quality; stable discovery
 order. Price is an eligibility ceiling and never a quality bonus. Commerce
 signals never create leader evidence, eligibility, or public content.
 
-Shopping and product-page coalescing maps exist only inside one request. The
-response is `Cache-Control: no-store`. There is no production index, prewarm,
-polling, background refresh, persistent plan/result cache, cross-request
-Shopping/page cache, or alternate recommender.
+Shopping, canonical-commerce, and product-page coalescing maps exist only
+inside one request. The response is `Cache-Control: no-store`. There is no
+production index, prewarm, polling, background refresh, persistent plan/result
+cache, cross-request provider/page cache, or alternate recommender.
 
-## Authoritative and rejected live results
+## Provider-contract decision
 
-All three reports below use the same five broad and five constrained frozen
-cases, one cache-cold attempt per cell, and no retry or replacement.
+SerpApi was selected for the bounded integration because its synchronous Google
+Shopping Light result exposes stable product identifiers and commerce fields,
+and its Google Immersive Product stores response exposes direct seller links,
+prices, availability text, and multiple offers. The integration uses only those
+request-time commerce surfaces; their ratings, order, and offers never prove
+market leadership.
 
-| Metric | Retained V20 | Rejected V21 | Rejected V22 |
-| --- | ---: | ---: | ---: |
-| HTTP success | 10/10 | 10/10 | 10/10 |
-| Non-empty | 10/10 | 9/10 | 10/10 |
-| Frozen leader top three | 5/10 | 2/10 | 2/10 |
-| Runtime evidence | 6/10 | 4/10 | 6/10 |
-| Runtime `strong` | 2/10 | 2/10 | 4/10 |
-| Scout fallback | 1/10 | 1/10 | 0/10 |
-| Mean latency | 23,629 ms | 23,674 ms | 26,008 ms |
-| p95 / maximum | 29,646 / 29,646 ms | 26,274 / 26,274 ms | 32,916 / 32,916 ms |
-| Logical / physical Serper | 137 / 137 | 139 / 137 | 144 / 143 |
-| Model tokens | 190,585 | 179,651 | 191,130 |
-| Estimated model cost | $0.189982 | $0.176157 | $0.199282 |
-| Mean / max payload | 797 / 1,542 B | 658 / 1,440 B | 907 / 1,617 B |
+DataForSEO exposes useful product/seller data but its documented task-POST then
+task-GET workflow adds polling and request coordination that is a poorer match
+for the current one-response route. Amazon Business exposes catalog and offer
+operations but requires Business Product Catalog onboarding and account-scoped
+access. Neither alternative is integrated.
 
-V20 passed 10/10 request, non-empty, product-safety, exact-binding, fresh-
-research, public-shape, one-response, three-hosted-search, fifteen-Serper-
-operation, strong-ahead-of-unscored, both shop-vac, and 30-second maximum gates.
-Only the 80% leader and 25-second p95 gates failed.
+## Authoritative and diagnostic live results
 
-V21 tested recognized editorial-domain filtering, high search context, US
-location, and supported-target page recovery. It lost three leaders and one
-non-empty cell versus V20. V22 restored unrestricted medium-context scouting,
-then tested a broader editorial prompt, normalized brand/model queries, and
-concurrent exact Shopping/strong-target page recovery. It also lost three
-leaders and exceeded the 30-second maximum. Both experimental code paths were
-fully removed; their JSON reports are audit evidence only.
+The V20 report remains the authoritative measured baseline:
 
-The reports are:
+- 10/10 HTTP 200 and 10/10 non-empty, including both shop-vac cases;
+- frozen leader top-three recall 5/10 (50%) versus the 80% gate;
+- runtime evidence in 6/10, runtime `strong` in 2/10, and one honest scout
+  fallback;
+- mean 23,629 ms and nearest-rank p95/maximum 29,646 ms;
+- 137 logical/physical Serper operations, ten Responses calls, and thirty
+  hosted searches; and
+- unchanged five-field payload averaging 797 bytes and peaking at 1,542 bytes.
 
-- authoritative: `docs/pr14-live-accuracy-report-v20-independent-concurrent.json`;
-- rejected: `docs/pr14-live-accuracy-report-v21-source-focused.json`;
-- rejected: `docs/pr14-live-accuracy-report-v22-concurrent-target-recovery.json`.
+The retained report is
+`docs/pr14-live-accuracy-report-v20-independent-concurrent.json`. V21 and V22
+remain rejected audit reports; their experimental code was removed.
 
-## Assessment and next decision
+After `c829fa4`, three cache-cold debug diagnostics—not benchmark cells—were
+run without retries:
 
-The remaining bottleneck is canonical request-time commerce coverage: an exact
-market leader must converge with a trustworthy current US offer, in-budget
-price, direct seller page, and hard-requirement proof. V21/V22 show that source
-filtering, prompt expansion, target-query wording, more `strong` targets, and
-extra same-provider page concurrency do not solve that boundary.
+| Request | HTTP / non-empty | Latency | Scout | Canonical product / offer calls | Serper logical / physical |
+| --- | --- | ---: | --- | ---: | ---: |
+| robot vacuum | 200 / yes | 19,097 ms | `provider_error` | 0 / 0 | 12 / 12 |
+| gaming monitor | 200 / yes | 11,644 ms | `provider_error` | 0 / 0 | 12 / 12 |
+| coffee maker | 200 / yes | 11,843 ms | `provider_error` | 0 / 0 | 12 / 12 |
 
-Do not restore either rejected experiment, tune to frozen benchmark identities,
-transfer facts across variants or merchants, infer requirements from market
-evidence, or weaken price/availability/page authority. The next credible
-architecture comparison requires a qualified request-scoped provider or
-retailer integration exposing canonical product identity, current offers,
-seller pages, and stable identifiers. DataForSEO and Amazon Business were only
-identified as possible contract classes; neither is integrated, credentialed,
-or qualified in this repository.
-
-A progressive response can change perceived latency but does not fix commerce
-coverage and would be a separate public-contract decision. Recommended
-reasoning level: **high** for provider/contract qualification; medium for a
-deterministic integration after a provider is selected.
+These diagnostics prove fallback integrity only. They do not prove canonical
+binding, provider call ceilings under live work, leader recall, quality,
+latency, tokens, cost, or payload for the new runtime. A separate production
+smoke request also returned HTTP 200 and products, but debug telemetry was
+disabled and it is not matrix evidence.
 
 ## Verification
 
-- Retained V20 source: 352/352 unit tests across 44 suites, typecheck, zero-
-  warning lint, and the Next.js 16.3.3 production build.
-- Playwright: 7/7 across Chromium desktop/mobile after removing V21/V22. It
-  emitted only environment-level `NO_COLOR` / `FORCE_COLOR` notices.
-- `git diff --check`: pass; no tracked runtime/test drift remains from the two
-  rejected experiments.
-- Build route manifest: only `/`, `/_not-found`, and `/api/recommendations`.
+- Unit tests: 358/358 across 45 suites.
+- TypeScript typecheck: pass.
+- ESLint: pass with zero warnings.
+- Next.js 16.3.3 production build: pass; only `/`, `/_not-found`, and
+  `/api/recommendations` are exposed.
+- Playwright: 7/7 across Chromium desktop/mobile; only environment-level
+  `NO_COLOR` / `FORCE_COLOR` notices were emitted.
+- `git diff --check`: pass.
 
-These checks prove deterministic invariants, not the failed live market-quality
-SLO.
+Coverage includes canonical source/token/direct-offer binding, exact-model and
+sibling isolation, unsafe and unavailable offer rejection, request-only
+coalescing, missing-key/provider fallback, cancellation, cache-key secrecy, the
+three-product/three-offer ceiling, internal provider provenance, sparse-rating
+shrinkage, and the unchanged public API contract. These checks prove
+deterministic invariants, not the unexecuted live market-quality SLO.
+
+## Next action and release gate
+
+First restore a working market-scout response and make a SerpApi credential
+available to the ordinary server process without inspecting `.env.local`.
+Then run one bounded debug request that actually produces at least one `strong`
+target and non-zero canonical product/offer telemetry. Inspect exact-model
+binding, direct seller URLs, availability filtering, and the three-plus-three
+provider ceiling from that request.
+
+Only after that smoke proof should the precommitted ten-case cache-cold matrix
+run, exactly once per cell with no retries or replacements. It must report
+leader recall, constraint precision, latency, OpenAI/hosted-search/Serper/
+canonical-provider calls, tokens, cost, payload size, and baseline-versus-new
+quality. Release still requires zero safety/binding/requirement/availability/
+budget failures, at least 80% eligible leader top-three recall, any passing
+`strong` leader ahead of unscored alternatives, required non-empty recall,
+cache-cold p95 at most 25 seconds, maximum 30 seconds, one Responses call, at
+most three hosted searches, at most fifteen logical Serper operations, at most
+three canonical product searches and three offer lookups, and unchanged public
+payload.
+
+If the live SerpApi contract cannot satisfy exact identity, direct seller URL,
+availability, or bounded-call requirements, remove or replace the adapter; do
+not weaken existing gates or add retained/background research. Recommended
+reasoning level: medium for the deterministic provider smoke and harness work;
+high only if provider/scout failures require a new contract decision.
 
 ## Hard boundaries and process incidents
 
@@ -165,19 +204,21 @@ Four process incidents occurred earlier in this goal:
 4. During the V18 investigation, a broad `rg` over `tests` again printed several
    protected-fixture lines before narrowing. They were not used as evidence.
 
-V21/V22 added no incident. Do not repeat those command patterns. No push,
-deployment, release, production-data action, destructive operation, background
-work, retained research cache, or benchmark retry occurred.
+The canonical-commerce phase added no incident. Do not repeat those command
+patterns. No push, deployment, release, production-data action, destructive
+operation, background work, retained research cache, or benchmark retry
+occurred.
 
 ## Evidence pointers
 
 | Evidence | Location |
 | --- | --- |
-| Retained runtime snapshot | `b4e1890` |
+| Current runtime snapshot | `c829fa4` |
+| Prior authoritative live snapshot | `b4e1890` |
 | Current decision | `docs/forward-roadmap.md`, PR-14 |
 | Canonical executed QA | latest PR-14 entry in `docs/qa-loop-results.md` |
 | Durable trust contracts | latest PR-14 entry in `docs/review-radar-test-memory.md` |
 | Frozen benchmark | `tests/benchmarks/pr14-live-accuracy-v2026-09a.json` |
-| Authoritative report | `docs/pr14-live-accuracy-report-v20-independent-concurrent.json` |
+| Authoritative prior report | `docs/pr14-live-accuracy-report-v20-independent-concurrent.json` |
 | Rejected reports | V21 and V22 under `docs/` |
 | Runtime architecture | `ReviewRadar-Overview.md` |

@@ -1885,3 +1885,39 @@ checkpoint. R7A remains blocked and separately approval-gated.
   enumeration and one later broad content search that printed a few brand-
   reference lines. No fixture was modified or used as evidence. Do not run
   broad searches over `tests`; use explicit paths only.
+
+### PR-14 bounded canonical-commerce resolver (2026-09-01)
+
+- Runtime commit `c829fa4` adds one optional request-scoped SerpApi commerce
+  path for at most three unresolved `strong` exact-model targets. Each target
+  consumes at most one Google Shopping Light product lookup and one bound Google
+  Immersive Product stores lookup. Serper remains independently capped at
+  fifteen logical operations.
+- SerpApi was selected over DataForSEO's task/poll workflow and Amazon Business's
+  onboarding/account-scoped catalog boundary. `SERPAPI_API_KEY` is server-only;
+  missing credentials, provider error, invalid output, no exact product, or no
+  usable seller offer preserves the existing deterministic fallback.
+- Provider tokens do not establish product or market identity. Direct seller
+  offers must exact-match the stable target model, isolate siblings, reject
+  explicit unavailability and unsafe URLs, and then pass every existing product,
+  condition, requirement, current availability, price, budget, direct-page,
+  merchant, image, duplicate, and SSRF gate. The minimal public card is
+  unchanged.
+- Calls are US-bound, no-cache, 6.5-second timeout-bounded, cancellation-aware,
+  and coalesced only inside the request. There is no prewarm, background job,
+  persistent plan/result, cross-request provider/page cache, second scout, or
+  alternate recommender.
+- Final deterministic wall: 358/358 unit tests across 45 suites, typecheck,
+  zero-warning lint, production build, Playwright 7/7, and diff checking.
+- Three diverse debug requests returned HTTP 200 and non-empty fallback results,
+  but the scout reached `provider_error` in all three before producing a strong
+  target; canonical product and offer attempts remained zero. These probes do
+  not qualify the new provider path, and no ten-case matrix was run.
+- Restore a working scout and make the SerpApi credential available without
+  inspecting `.env.local`; then require one bounded strong-target debug proof
+  before running the frozen ten-case matrix exactly once. Until then, V20 at
+  `b4e1890` remains prior authoritative live evidence and PR-14 remains a
+  release failure. No push or deployment occurred.
+- The authoritative process incident count is four, not the two recorded in the
+  preceding historical subsection. The canonical-commerce work added no new
+  incident; do not inspect `.env.local` or access the protected fixture tree.

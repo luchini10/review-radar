@@ -11,6 +11,37 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Add bounded canonical commerce resolution
+
+#### Changed
+
+- Added an optional server-only SerpApi path for the first three unresolved
+  `strong` exact-model targets: one Google Shopping Light product lookup and one
+  exact-token Google Immersive Product stores lookup per target, capped at
+  three plus three provider calls.
+- Bound direct seller offers to the exact stable model, isolated sibling
+  variants, removed explicitly unavailable and unsafe offers, and preserved all
+  existing product, requirement, availability, price, budget, page, merchant,
+  image, duplicate, and SSRF gates.
+- Kept canonical requests no-cache, timeout-bounded, cancellation-aware, and
+  request-only. Missing credentials or provider failure falls back without a
+  quality boost; the fifteen-logical-Serper ceiling and five-field public card
+  remain unchanged.
+- Extended the live harness to report canonical product and offer calls and
+  enforce their separate ceilings without merging them into Serper accounting.
+
+#### Verified
+
+- Full validation passed 358/358 unit tests across 45 suites, typecheck, zero-
+  warning lint, the Next.js 16.3.3 production build, Playwright 7/7, and diff
+  checking.
+- Three diverse cache-cold debug probes returned HTTP 200 and non-empty fallback
+  results, but each scout ended in `provider_error` before a strong target was
+  available; canonical calls were therefore zero. The frozen matrix was not run
+  against fallback-only behavior, and the new runtime is not release-qualified.
+- V20 at `b4e1890` remains the prior authoritative live baseline, not evidence
+  for runtime `c829fa4`. No push or deployment occurred.
+
 ### Codex - Reject two unproven market-quality experiments
 
 #### Changed

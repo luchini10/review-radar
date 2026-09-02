@@ -4852,10 +4852,14 @@ current implementation authority.
 
 ### PR-14 - request-time market-quality reset
 
-**Status:** implemented through runtime commit `b4e1890`; deterministic
-verification passes. The latest ten-case no-retry live matrix passes non-empty,
-safety, binding, public-shape, call-ceiling, and 30-second maximum-latency gates,
-but fails leader recall and 25-second p95. PR-14 is not release-qualified.
+**Status:** implemented through runtime commit `c829fa4`; deterministic
+verification passes. The bounded canonical-commerce addition has not completed
+a live quality matrix because three diverse diagnostic requests reached scout
+`provider_error` before producing a strong target, leaving the new provider path
+unexercised. V20 at `b4e1890` remains the authoritative prior live comparison;
+it passes non-empty, safety, binding, public-shape, call-ceiling, and 30-second
+maximum gates but fails leader recall and 25-second p95. PR-14 is not release-
+qualified.
 
 **Objective:** research the current market for every shopper search, including
 repeated equivalent searches, without a retained market index, precomputation,
@@ -4877,6 +4881,19 @@ only Shopping and product-page coalescing maps are allocated inside the current
 `Cache-Control: no-store`; there is no production index, prewarm, polling,
 background work, persistent plan/result cache, or alternate recommender.
 
+For at most three unresolved `strong` targets, the current selector also starts
+an optional request-scoped SerpApi canonical-commerce pipeline concurrently
+with exact-target Serper work. Each target consumes at most one Google Shopping
+Light product lookup and one exact-token Google Immersive Product stores lookup,
+for a separate three-product/three-offer ceiling. Direct seller offers must bind
+the exact stable model, reject sibling variants and explicit unavailability,
+and pass every existing page, merchant, condition, requirement, price, budget,
+image, duplicate, and SSRF gate. Missing credentials, provider failure, invalid
+output, or no exact offer returns no candidate and preserves deterministic
+fallback. Provider work is timeout-bounded, cancellation-aware, no-cache, and
+coalesced only for the current request; it adds no background or cross-request
+state.
+
 **Generalized accuracy corrections:** exact scout models are carried through
 retailer-page discovery; generic aliases cannot bypass an exact target; numeric,
 named, generation, and hyphenated catalog siblings remain isolated; standalone
@@ -4889,7 +4906,7 @@ checked independently, repeated identical slug models remain idempotent,
 placeholder `img-na` images are rejected, and leaf blowers are separated from
 compact workshop/jobsite blowers and accessories.
 
-**Current frozen live audit:**
+**Prior authoritative frozen live audit (runtime `b4e1890`):**
 `tests/benchmarks/pr14-live-accuracy-v2026-09a.json` precommits five broad and
 five constrained cases, one cache-cold attempt each with no retries. The
 authoritative report is
@@ -4912,19 +4929,19 @@ by 6,904 ms, and model tokens by 12,372 versus V19. Every deterministic product
 safety, exact-binding, public-contract, call-ceiling, and strong-ahead-of-
 unscored gate passed. The aggregate leader and p95 gates remain failed.
 
-**Verification:** 352/352 unit tests across 44 suites, typecheck, zero-warning
-lint, the Next.js 16.3.3 production build, and Playwright 7/7 across Chromium
-desktop/mobile pass. The build exposes only `/`, `/_not-found`, and
-`/api/recommendations`.
+**Verification:** the current `c829fa4` source passes 358/358 unit tests across
+45 suites, typecheck, zero-warning lint, the Next.js 16.3.3 production build,
+and Playwright 7/7 across Chromium desktop/mobile. The build exposes only `/`,
+`/_not-found`, and `/api/recommendations`. This deterministic result does not
+replace the earlier V20 live measurement.
 
-**Decision:** retain the concurrent independent request-time implementation as
-the current local architecture, but do not release or claim dependable best-in-
-budget selection. Do not restore the rejected evidence index and do not
-continue same-provider prompt/query tuning as a substitute for commerce
-coverage. The next evidence-supported comparison requires a qualified request-
-scoped provider or retailer integration with canonical product identity,
-current offers, direct seller pages, and stable identifiers. A progressive or
-asynchronous response changes delivery but does not fix coverage and would be a
+**Decision:** retain the independent request-time scout and bounded canonical-
+commerce integration locally, but do not release or claim dependable best-in-
+budget selection. Do not restore the rejected evidence index or continue prompt
+and query tuning as a substitute for commerce coverage. First restore a working
+scout response and exercise the optional provider on one bounded strong-target
+request; only then run the precommitted ten-case matrix once. A progressive or
+asynchronous response changes delivery but does not fix coverage and remains a
 separate public-contract decision.
 
 **Exact-binding follow-up at `61a914d`:** live QA exposed three generalized
@@ -5128,6 +5145,41 @@ Together they strengthen the prior conclusion: source filtering, prompt
 expansion, target-query wording, and extra same-provider target-page concurrency
 do not solve the canonical current-offer/page bottleneck. V20 remains the
 authoritative retained report and PR-14 remains not release-qualified.
+
+**Canonical-commerce resolver follow-up at `c829fa4`:** official provider-
+contract qualification selected SerpApi's synchronous Google Shopping Light
+product identity and Google Immersive Product seller-store surfaces over
+DataForSEO's task-POST/task-GET workflow and Amazon Business's onboarding and
+account-scoped catalog boundary. The optional server-only adapter is limited to
+the first three unresolved `strong` targets, one exact product lookup and one
+bound stores lookup per target. It uses no-cache US requests, a 6.5-second
+timeout, cancellation, and request-only coalescing. The existing fifteen-
+logical-Serper ceiling remains separate and unchanged.
+
+All canonical candidates retain exact stable-model and sibling isolation.
+Explicitly unavailable stores, unsafe URLs, and invalid responses are dropped;
+unknown availability remains provisional. A provider token never transfers
+identity, evidence, price, availability, or facts across a sibling or merchant.
+Every existing safety, requirement, current-page, price, budget, image,
+duplicate, and SSRF gate still runs before ranking or output. Missing key or
+provider failure falls back with no quality boost. The public five-field card
+and one synchronous request remain unchanged.
+
+Deterministic validation passes 358/358 unit tests across 45 suites, typecheck,
+zero-warning lint, production build, Playwright 7/7, and diff checking. Three
+diverse debug diagnostics returned HTTP 200 and non-empty results, but their
+scouts all ended in `provider_error`; no strong targets or canonical calls were
+produced. Those diagnostics prove fallback integrity only. The credential state
+is unverified because `.env.local` was not inspected, and the frozen matrix was
+correctly withheld rather than measuring fallback again.
+
+Next, restore the scout and make the canonical provider credential available
+without inspecting `.env.local`. Require one bounded debug request with a
+strong target and non-zero product/offer telemetry, verify exact binding and the
+three-plus-three ceiling, then execute the frozen ten-case cache-cold matrix
+once with no retries. Until that evidence exists, `c829fa4` has no live leader,
+latency, cost, call, or payload qualification and V20 remains prior baseline
+evidence only.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
