@@ -25,6 +25,7 @@ Integration complete. Validation: 135 local unit tests, 22 production browser te
 strict lint, typecheck and production build passed. Independent integration review
 found no alternate runtime backend. Browser/API tests used mocked providers.
 Five extra worktrees are now inactive recovery archives; only main is registered.
-Commit/push and hosting status are reported in the consolidation release task.
-Hosting target is not configured in the repository; user has been asked for the
-hosting service/project or existing live URL. Deployment remains pending that answer.
+Ranking implementation committed and pushed as aa0e6b413ab96431247f07b9f502aa0ba11c4bce.
+Local and remote have only main; obsolete remote branches were also removed.
+Deployment is explicitly on hold: the user said "dont deploy yet" after the push.
+Do not deploy until the user authorizes resuming deployment.
