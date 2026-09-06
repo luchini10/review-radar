@@ -11,7 +11,7 @@ export function ProductCard({
   product: SelectionProductRecommendation;
 }) {
   const [failedImage, setFailedImage] = useState<string>();
-  const imageUrl = product.imageUrl;
+  const imageUrl = product.image?.url;
   return (
     <article className="product-card">
       <div className="product-image">

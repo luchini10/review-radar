@@ -1,3 +1,18 @@
+## 2026-09-06 — One authoritative ranking implementation
+
+User authorized replacing the prior backend, removing alternate versions and
+committing/pushing/deploying the ranking implementation. Main now uses one bounded
+AI web-research request followed by optional matched product images. The old
+selection pipeline and experimental adaptive/verified mode switches are removed.
+Names, links and optional images are the public response; price/stock verification
+is not promised. Existing landing design and lifecycle safeguards are retained.
+
+Verified: 135 local unit tests; 22 production-mode browser tests; typecheck;
+strict lint; production build. Independent review found no runtime blocker.
+No paid quality evaluation ran; superior live accuracy is not established.
+Five extra worktrees were retired intact to recovery storage and merged local
+branches removed. Git history is preserved. Hosting destination remains pending.
+
 # ReviewRadar Change Log
 
 Plain-English record of meaningful ReviewRadar changes.

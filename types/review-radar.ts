@@ -16,17 +16,17 @@ export type RecommendationApiRequest = {
   extractedRequirements?: StructuredRequirements;
 };
 
-export type SelectionPrice = {
-  amount: number;
-  currency: "USD";
+export type ProductImage = {
+  url: string;
+  sourceUrl: string;
+  sourceTitle: string;
+  productId?: string;
 };
 
 export type SelectionProductRecommendation = {
-  category: string;
-  imageUrl: string | null;
   name: string;
-  price: SelectionPrice | null;
   productPageUrl: string;
+  image?: ProductImage;
 };
 
 export type SelectionRecommendationResult = {
@@ -114,81 +114,6 @@ export type StructuredRequirements = {
   summary: string[];
 };
 
-export type ProductFieldEvidence<T = string | number | string[] | null> = {
-  confidence: "High" | "Medium" | "Low";
-  sourceType:
-    | "json_ld"
-    | "open_graph"
-    | "retailer_page"
-    | "manufacturer_page"
-    | "serper"
-    | "snippet";
-  sourceUrl: string;
-  value: T;
-  verifiedAt: string;
-};
-
-export type ProductOffer = {
-  availability?: ProductFieldEvidence<
-    | "in_stock"
-    | "limited_availability"
-    | "out_of_stock"
-    | "preorder"
-    | "unknown"
-  >;
-  price: ProductFieldEvidence<number | null>;
-  priceCurrency: ProductFieldEvidence<string | null>;
-};
-
-export type ProductAvailabilityTrust = {
-  source:
-    | "page_metadata"
-    | "shopping_offer"
-    | "structured_availability"
-    | "structured_offer"
-    | "unverified_page";
-  status: "available" | "unavailable" | "unknown";
-};
-
-export type ProductEligibilityVerdict = {
-  status:
-    | "buyable_product"
-    | "likely_product"
-    | "evidence_only"
-    | "listing_or_search"
-    | "non_product"
-    | "unknown";
-  confidence: "high" | "medium" | "low";
-  canRenderAsProductCard: boolean;
-  canUseAsEvidence: boolean;
-  reasons: string[];
-};
-
-export type ProductPriceTrust = {
-  status:
-    | "verified"
-    | "usable"
-    | "suspicious"
-    | "conflicting"
-    | "missing";
-  price: number | null;
-};
-
-export type ProductMetadata = {
-  brand?: ProductFieldEvidence<string | null>;
-  colors?: ProductFieldEvidence<string[]>;
-  dimensions?: {
-    depth?: ProductFieldEvidence<number | null>;
-    height?: ProductFieldEvidence<number | null>;
-    unit?: "in" | "cm" | null;
-    width?: ProductFieldEvidence<number | null>;
-  };
-  image?: ProductFieldEvidence<string | null>;
-  modelNumber?: ProductFieldEvidence<string | null>;
-  offers: ProductOffer[];
-  title?: ProductFieldEvidence<string | null>;
-};
-
 export type ProductSpecSource =
   | "name"
   | "title"
@@ -206,51 +131,3 @@ export type ProductSpecValue = {
 };
 
 export type ProductSpecMap = Record<string, ProductSpecValue>;
-
-export type ProductDiscoveryPath =
-  | "broad_commerce"
-  | "expected_target_commerce"
-  | "expected_target_page"
-  | "request_fit_commerce";
-
-export type RawProductCandidate = {
-  id: string;
-  name: string;
-  brand: string | null;
-  category: string;
-  productUrl: string;
-  imageUrl: string | null;
-  price: number | null;
-  currentShoppingOffer?: boolean;
-  commerceSignals?: {
-    offerCount: number | null;
-    position: number | null;
-    productId: string | null;
-    rating: number | null;
-    ratingCount: number | null;
-  };
-  discoveryOrder?: number;
-  discoveryPaths?: ProductDiscoveryPath[];
-  marketEvidence?: {
-    consensusOrder: number;
-    sourceUrls: string[];
-    targetBrand: string;
-    targetModel: string;
-    tier: "strong" | "supported";
-  };
-  retailer?: string | null;
-  availableColors: string[];
-  dimensions: {
-    width: number | null;
-    depth: number | null;
-    height: number | null;
-    unit: "in" | "cm" | null;
-  };
-  keySpecs: string[];
-  evidenceSources: Array<{
-    title: string;
-    url: string;
-    snippet: string;
-    snippetProvenance?: "source-derived" | "query-derived";
-  }>;
-};

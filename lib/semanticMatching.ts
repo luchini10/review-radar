@@ -64,6 +64,18 @@ const semanticFeatureDefinitions: SemanticFeatureDefinition[] = [
     type: "feature",
   },
   {
+    aliases: [
+      "active noise cancellation",
+      "active noise cancelling",
+      "active noise canceling",
+      "adaptive noise cancellation",
+      "anc",
+    ],
+    canonical: "active noise cancellation",
+    concrete: true,
+    type: "feature",
+  },
+  {
     aliases: ["left handed", "left-handed", "for left hand", "left hand model"],
     canonical: "left handed",
     conflictingAliases: ["right handed", "right-handed", "for right hand"],
@@ -580,7 +592,7 @@ export function semanticDefinitionFor(value: string) {
     [definition.canonical, ...definition.aliases].some((alias) => {
       const aliasCompact = compactMeaning(alias);
 
-      return aliasCompact === compact || compact.includes(aliasCompact);
+      return aliasCompact === compact || containsMeaning(normalized, alias);
     }),
   );
 }
@@ -741,7 +753,7 @@ function verificationUncertaintyPattern(term: string) {
       "i",
     ),
     new RegExp(
-      `\\b${pattern}\\b(?:\\W+\\w+){0,5}\\W+\\b(?:not\\s+verified|not\\s+confirmed|not\\s+proven|unverified|unknown|unclear)\\b`,
+      `\\b${pattern}\\b(?:\\W+\\w+){0,5}\\W+\\b(?:not(?:\\s+(?:been|yet)){0,2}\\s+(?:verified|confirmed|proven)|unverified|unknown|unclear)\\b`,
       "i",
     ),
   ];

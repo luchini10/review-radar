@@ -169,7 +169,7 @@ summary::marker { content: ""; }
 .brief-category { font-size: 19px; font-weight: 600; letter-spacing: -.35px; overflow-wrap: anywhere; }
 .brief-budget { font-size: 13px; color: var(--rr-muted); margin-top: 6px; }
 .brief-disclosure { margin-top: 12px; }
-.brief-disclosure > summary { color: var(--rr-forest); justify-content: flex-start; width: fit-content; }
+.brief-disclosure > summary { color: var(--rr-focus); justify-content: flex-start; width: fit-content; }
 .brief-details { display: grid; gap: 16px; font-size: 14px; color: var(--rr-muted); }
 .brief-details h2 { font-size: 13px; font-weight: 600; color: var(--rr-ink); margin: 4px 0 8px; }
 .brief-details p { white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -274,9 +274,9 @@ summary::marker { content: ""; }
 }
 
 /* Full-bleed landing artwork with native text and search controls. */
-.brand-blue { color: #0667ff; }
-.brand-radar { width: 28px; height: 54px; margin-left: -10px; border: 5px solid #0667ff; border-left: 0; border-radius: 0 40px 40px 0; position: relative; }
-.brand-radar::after { content: ""; position: absolute; inset: 6px 6px 6px 0; border: 4px solid #0667ff; border-left: 0; border-radius: 0 30px 30px 0; }
+.brand-accent { color: var(--rr-focus); }
+.brand-radar { width: 28px; height: 54px; margin-left: -10px; border: 5px solid var(--rr-focus); border-left: 0; border-radius: 0 40px 40px 0; position: relative; }
+.brand-radar::after { content: ""; position: absolute; inset: 6px 6px 6px 0; border: 4px solid var(--rr-focus); border-left: 0; border-radius: 0 30px 30px 0; }
 .brand { font-family: Arial, Helvetica, sans-serif; color: #03101f; gap: 0; font-size: 44px; letter-spacing: -2px; font-weight: 750; }
 .landing-view .site-header { position: absolute; inset: 0 0 auto; z-index: 3; }
 .landing-view .header-content { height: auto; max-width: none; padding: 46px 4.427vw 0; }
@@ -349,8 +349,8 @@ summary::marker { content: ""; }
 .hero-copy .smart-features { margin-top: 16px; }
 .hero-copy .form-actions { margin-top: 16px; padding-top: 16px; gap: 12px; }
 .hero-copy .form-actions > p { font-size: 12px; }
-.hero-copy .primary-button { background: #0665ff; box-shadow: none; }
-.hero-copy .primary-button:hover { background: #0050d8; }
+.hero-copy .primary-button { background: var(--rr-focus); box-shadow: none; }
+.hero-copy .primary-button:hover { background: #515a30; }
 @media (max-width: 1000px) and (min-width: 760px) {
   .hero-copy { width: 58%; }
 }

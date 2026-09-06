@@ -3,10 +3,28 @@ import { describe, it } from "node:test";
 
 import {
   matchSemanticFeatureEvidence,
+  semanticCanonicalValue,
   violatesSemanticDealbreaker,
 } from "../lib/semanticMatching.ts";
 
 describe("semantic matching", () => {
+  it("matches complete semantic words rather than acronyms inside unrelated names", () => {
+    assert.equal(semanticCanonicalValue("New Balance"), "new balance");
+    assert.equal(semanticCanonicalValue("enhanced performance"), "enhanced performance");
+    assert.equal(semanticCanonicalValue("supports ANC"), "active noise cancellation");
+  });
+
+  it("requires affirmative active noise cancellation rather than passive isolation or transparency", () => {
+    for (const evidence of ["Hybrid ANC reduces unwanted ambient sound.", "Includes active noise cancelling.", "Adaptive active noise canceling technology."]) {
+      assert.equal(matchSemanticFeatureEvidence(evidence, "active noise cancellation").status, "pass", evidence);
+    }
+    for (const evidence of ["Passive noise isolation with ear tips.", "Transparency and ambient sound mode.", "Environmental noise cancellation for phone calls."]) {
+      assert.notEqual(matchSemanticFeatureEvidence(evidence, "ANC").status, "pass", evidence);
+    }
+    assert.equal(matchSemanticFeatureEvidence("No active noise cancellation.", "ANC").status, "fail");
+    assert.equal(matchSemanticFeatureEvidence("ANC support has not been verified.", "active noise cancellation").status, "needs_verification");
+  });
+
   it("matches equivalent wording and unit variants", () => {
     const cases = [
       ["Includes a foam sprayer for car washing.", "foam cannon"],

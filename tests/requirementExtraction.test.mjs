@@ -7,6 +7,29 @@ import {
 } from "../lib/requirementExtraction.ts";
 
 describe("structured requirement extraction", () => {
+  it("does not invert ordinary words containing no or not into exclusions", () => {
+    for (const priorities of ["ergonomic adjustments", "notebook compatibility", "noise isolation", "innovative controls"]) {
+      const result = extractStructuredRequirements({ query: "product", priorities });
+      assert.deepEqual(result.avoidConstraints, [], priorities);
+      assert.ok([...result.ambiguousConstraints, ...result.preferredConstraints].some((item) => item.value === priorities), priorities);
+    }
+    for (const priorities of ["avoid leather", "no leather", "not leather", "without leather", "do not want leather"]) {
+      const result = extractStructuredRequirements({ query: "chair", priorities });
+      assert.ok(result.avoidConstraints.some((item) => item.value === "leather"), priorities);
+    }
+  });
+
+  it("treats named active noise cancellation as a concrete required feature", () => {
+    for (const priorities of ["active noise cancellation", "ANC", "active noise cancelling", "active noise canceling"]) {
+      const result = extractStructuredRequirements({ query: "wireless earbuds", priorities });
+      assert.deepEqual(result.avoidConstraints, [], priorities);
+      assert.ok(result.requiredConstraints.some((item) => item.normalizedMeaning === "active noise cancellation"), priorities);
+    }
+    const excluded = extractStructuredRequirements({ query: "wireless earbuds", priorities: "without ANC" });
+    assert.ok(excluded.avoidConstraints.some((item) => item.normalizedMeaning === "active noise cancellation"));
+    assert.equal(excluded.requiredConstraints.some((item) => item.normalizedMeaning === "active noise cancellation"), false);
+  });
+
   it("turns hard language into validated deterministic requirements", () => {
     const requirements = extractStructuredRequirements({
       budget: "under $500",

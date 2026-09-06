@@ -9,16 +9,35 @@ import {
 const result = {
   recommendations: [
     {
-      category: "gaming monitor",
-      imageUrl: null,
       name: "Dell G2724D",
-      price: { amount: 199, currency: "USD" },
       productPageUrl: "https://www.dell.com/en-us/shop/dell-g2724d/apd/210-bhxc",
     },
   ],
 };
 
 describe("selection recommendation client", () => {
+  it("accepts a valid optional image while keeping its product name and original link", async () => {
+    const image = { url: "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:example", sourceUrl: "https://example.com/monitor", sourceTitle: "Dell G2724D", productId: "12345" };
+    const response = await runRecommendationRequest({
+      fetchImpl: async () => Response.json({ result: { recommendations: [{ ...result.recommendations[0], image }] } }),
+      payload: { query: "monitor" }, signal: new AbortController().signal,
+    });
+    assert.deepEqual(response.recommendations, [{ ...result.recommendations[0], image }]);
+  });
+
+  it("discards malformed optional images without discarding valid products", async () => {
+    for (const image of [null, "https://example.com/photo.jpg", {},
+      { url: "http://localhost/image", sourceUrl: "https://example.com/monitor", sourceTitle: "Dell G2724D" },
+      { url: "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:x", sourceUrl: "https://example.com/monitor" },
+    ]) {
+      const response = await runRecommendationRequest({
+        fetchImpl: async () => Response.json({ result: { recommendations: [{ ...result.recommendations[0], image }] } }),
+        payload: { query: "monitor" }, signal: new AbortController().signal,
+      });
+      assert.deepEqual(response, result);
+    }
+  });
+
   it("uses one POST request and accepts only the minimal result", async () => {
     const controller = new AbortController();
     const calls = [];
@@ -58,6 +77,22 @@ describe("selection recommendation client", () => {
         }),
       RecommendationClientError,
     );
+  });
+
+  it("rejects unsafe links, obsolete fields and oversized shortlists", async () => {
+    const product = result.recommendations[0];
+    for (const recommendations of [
+      [{ ...product, productPageUrl: "javascript:alert(1)" }],
+      [{ ...product, productPageUrl: "https://user:secret@example.com/item" }],
+      [{ ...product, price: null }],
+      [{ ...product, name: " " }],
+      Array.from({ length: 6 }, () => product),
+    ]) {
+      await assert.rejects(() => runRecommendationRequest({
+        fetchImpl: async () => Response.json({ result: { recommendations } }),
+        payload: { query: "monitor" }, signal: new AbortController().signal,
+      }), RecommendationClientError);
+    }
   });
 
   it("surfaces a safe server error and malformed JSON response", async () => {

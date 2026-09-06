@@ -1,3 +1,10 @@
+# Current authority — 2026-09-06
+
+The user authorized the ranking consolidation on main, commit, push and deployment.
+Earlier backend isolation/promotion gates below are historical. Follow
+docs/agent-next-task.md for current runtime and release status. No experimental
+mode is supported. Existing paid-evaluation limits remain in effect.
+
 # ReviewRadar Forward Roadmap (R/C-series history + OAI migration)
 
 Adopted 2026-07-10. This document governs all forward sequencing. Completed

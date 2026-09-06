@@ -9,7 +9,9 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npm run dev -- --hostname 127.0.0.1 --port 3100",
+    command: process.env.PLAYWRIGHT_PRODUCTION === "1"
+      ? "npm run start -- --hostname 127.0.0.1 --port 3100"
+      : "npm run dev -- --hostname 127.0.0.1 --port 3100",
     env: {
       OPENAI_API_KEY: "",
       SERPER_API_KEY: "",

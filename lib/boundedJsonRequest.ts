@@ -13,7 +13,7 @@ function validMaximum(maxBytes: number) {
   return Number.isSafeInteger(maxBytes) && maxBytes > 0;
 }
 
-function declaredLength(request: Request) {
+function declaredLength(request: Pick<Request, "headers">) {
   const header = request.headers.get("content-length");
   if (header === null) return { ok: true as const, value: null };
   const value = header.trim();
@@ -27,7 +27,7 @@ function declaredLength(request: Request) {
 }
 
 export async function readBoundedJsonBody(
-  request: Request,
+  request: Pick<Request, "headers" | "body">,
   { maxBytes = DEFAULT_JSON_BODY_MAX_BYTES }: { maxBytes?: number } = {},
 ): Promise<BoundedJsonBodyResult> {
   if (!validMaximum(maxBytes)) {

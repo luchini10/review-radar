@@ -153,7 +153,7 @@ export default function Home() {
       <header className="site-header">
         <div className="header-content">
           <a className="brand" href="#main" aria-label="ReviewRadar">
-            <span>Review<span className="brand-blue">Radar</span></span><span className="brand-radar" aria-hidden="true" />
+            <span>Review<span className="brand-accent">Radar</span></span><span className="brand-radar" aria-hidden="true" />
           </a>
           <a className="text-action" href="#how-it-works" onClick={() => {
             if (howItWorks.current) howItWorks.current.open = true;

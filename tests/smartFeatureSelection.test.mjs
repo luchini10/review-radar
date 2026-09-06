@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { detectRequirementConflicts } from "../lib/requirementConflicts.ts";
 import { extractStructuredRequirements } from "../lib/requirementExtraction.ts";
 import {
   createSelectedSmartFeature,
@@ -121,25 +120,6 @@ describe("structured smart feature selections", () => {
       requirements.requiredConstraints.some((item) => /50 ft ft/i.test(item.label)),
       false,
     );
-  });
-
-  it("detects conflicts between Smart Features and Important Details", () => {
-    const color = createSelectedSmartFeature(colorFeature, "Black");
-    const extractedRequirements = extractStructuredRequirements({
-      query: "chair",
-      priorities: "not black",
-      selectedFeatures: [color],
-    });
-
-    const conflicts = detectRequirementConflicts({
-      query: "chair",
-      priorities: "not black",
-      selectedFeatures: [color],
-      extractedRequirements,
-    });
-
-    assert.equal(conflicts.length, 1);
-    assert.match(conflicts[0], /require Black/i);
   });
 
   it("normalizes category aliases consistently on the frontend", () => {

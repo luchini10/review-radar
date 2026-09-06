@@ -12,7 +12,6 @@
     "benchmark:accuracy:run": "node --no-warnings scripts/run-accuracy-benchmark.mjs",
     "start": "next start",
     "lint": "eslint",
-    "qa:live-accuracy": "node --no-warnings scripts/run-live-accuracy-matrix.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --no-warnings --test tests/*.test.mjs",
     "test:e2e": "playwright test",

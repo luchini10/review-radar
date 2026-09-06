@@ -1,115 +1,47 @@
 # ReviewRadar
 
-ReviewRadar is a request-time product-selection app. A shopper enters a product
-category plus optional budget, must-have details, and exclusions. ReviewRadar
-then performs fresh discovery and research for that request, validates current
-product offers and pages, and returns a small ranked shortlist.
+ReviewRadar uses one authoritative product-ranking backend. One OpenAI Responses
+request researches up to five products using current web sources and returns names
+and direct product links in recommendation order. Optional Serper Shopping lookups
+add matching images without changing the ranking.
 
-Product research is request-time and request-bound. ReviewRadar does not
-precompute market research, keep a persistent product-evidence index, prewarm
-recommendations, refresh research in the background, or reuse one shopper's
-product research for another search.
+The app considers quality, performance, reliability, owner experience and popularity.
+Budget and preferences guide research. Current prices, stock and product claims are
+not independently verified; shoppers check those on the linked product pages.
+Cards show only a name, optional image and View product link.
 
-Each product card contains only:
+## Setup
 
-- product image when identity-safe;
-- product name;
-- simple product/category label;
-- current USD price when trustworthy;
-- a direct **View product** link.
+Run `npm install`, configure server-only `OPENAI_API_KEY` in the existing environment,
+and run `npm run dev`. Optional `SERPER_API_KEY` enables product images. Never overwrite
+an existing credential file. `.env.example` documents the supported configuration.
 
-There are no research reports, confidence badges, pros/cons, citations,
-evidence breakdowns, or long recommendation explanations in the public result.
+The default model is `gpt-5.5` with medium reasoning. `OPENAI_RESEARCH_MODEL` may select
+an account-supported model with Responses web search and Structured Outputs.
+There is no alternative research-mode switch or fallback selection engine.
 
-## Requirements
+Each search uses one model request, at most six hosted web actions, at most 8,000
+output tokens, a 75-second research deadline and no retries. Optional images use at
+most five parallel Shopping requests with six-second deadlines. No cross-request
+product cache, database, scheduled research or background refresh is used.
 
-- Windows 10 or Windows 11
-- Node.js LTS and npm
-- PowerShell
-- a Serper.dev API key for live Shopping and product-page discovery
-- optionally, an OpenAI API key for the fresh request-time market scout
+`POST /api/recommendations` returns:
 
-## Install
-
-From PowerShell in this repository:
-
-```powershell
-npm install
+```json
+{"result":{"recommendations":[{"name":"Product name","productPageUrl":"https://manufacturer.example/product"}]}}
 ```
 
-If PowerShell blocks `npm.ps1`, use the Windows command directly:
+Products may include `image: {url, sourceUrl, sourceTitle, productId?}`. The client
+discards invalid optional imagery without losing the product. The server validates
+output shape, exact source-observed HTTPS links, duplicates and cancellation.
 
-```powershell
-& "C:\Program Files\nodejs\npm.cmd" install
-```
+## Validation and release
 
-## Configure local credentials
+Run `npm test`, `npm run typecheck`, `npm run lint -- --max-warnings=0`,
+`npm run build`, and `npm run test:e2e`. Browser tests mock provider calls.
+These checks do not establish live recommendation accuracy.
 
-Create `.env.local` only when it does not already exist:
-
-```powershell
-if (!(Test-Path .env.local)) { Copy-Item .env.example .env.local }
-```
-
-Set the server-only keys in `.env.local`:
-
-```text
-SERPER_API_KEY=your_serper_key
-OPENAI_API_KEY=your_openai_key
-REVIEW_RADAR_CONSTRAINT_ALLOCATION=off
-```
-
-`SERPER_API_KEY` is required for product results. `OPENAI_API_KEY` is optional;
-without it the request falls back to neutral live Serper discovery with no
-market-scout quality boost. The constraint-allocation flag only changes how
-otherwise ambiguous Important Details are treated in the current request. It
-does not cache or persist product research.
-
-Never use `NEXT_PUBLIC_` for credentials, and do not overwrite an existing
-`.env.local` after adding real keys. Restart the development server after
-changing local environment values.
-
-## Run locally
-
-```powershell
-npm run dev
-```
-
-Open `http://localhost:3000`, enter a product search, and select **Find
-Recommendations**. Live searches consume configured provider quota.
-
-The browser sends one `POST /api/recommendations` request. The server performs
-fresh scouting and Shopping discovery, applies deterministic safety and
-requirement gates, resolves current product pages/prices/images, and returns
-only the minimal product shape. Responses use `Cache-Control: no-store`.
-
-## Verification commands
-
-```powershell
-npm run typecheck
-npm run lint
-npm test
-npm run build
-npm run test:e2e
-```
-
-`npm run qa:live-accuracy` is the bounded paid live-audit harness. It requires
-an explicit approved run count and should be used only for an authorized live
-window; it is not part of ordinary credential-free verification.
-
-## Current boundaries
-
-- no accounts, saved searches, search history, or recommendation database;
-- no persistent cross-request product, Shopping, page, or research cache;
-- no background recommendation job, polling route, alternate recommender, or
-  startup prewarm;
-- one public recommendation route: `POST /api/recommendations`;
-- Serper is the sole commerce/search transport;
-- OpenAI scouting uses `store: false` and is not price, availability, product-
-  identity, or eligibility authority;
-- products without safe direct detail pages are not returned;
-- budgeted searches require a trustworthy in-budget USD price;
-- live provider coverage can still omit a qualifying product.
-
-For implementation details and current measured limitations, see
-`ReviewRadar-Overview.md` and `docs/agent-next-task.md`.
+`main` is the source of truth. Historical Git commits and recovery archives are
+recovery material, not supported alternate versions. Legacy benchmark records
+remain historical evidence and do not describe the current product contract.
+See [current handoff](docs/agent-next-task.md) for release state and limitations.

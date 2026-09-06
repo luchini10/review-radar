@@ -1,307 +1,140 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { afterEach, beforeEach, describe, it } from "node:test";
+import * as route from "../app/api/recommendations/route.ts";
+import { createRecommendationPostHandler } from "../lib/recommendationHandler.ts";
+import { enrichProductImages } from "../lib/productImages.ts";
+import { RequestCancelledError } from "../lib/requestCancellation.ts";
+import { ProductResearchError } from "../lib/productResearch.ts";
 
-import * as routeModule from "../app/api/recommendations/route.ts";
-
-const product = {
-  category: "gaming monitor",
-  imageUrl: "https://cdn.example/acer-xv272u.jpg",
-  name: "Acer Nitro XV272U",
-  price: { amount: 179.99, currency: "USD" },
-  productPageUrl:
-    "https://www.bestbuy.com/site/acer-nitro-xv272u/6570234.p",
-};
-
-function admission() {
-  return {
-    tryAcquire() {
-      return { ok: true, release() {} };
-    },
-  };
-}
-
+const product = { name: "Example Brewer", productPageUrl: "https://example.com/brewer" };
 function dependencies(overrides = {}) {
   return {
-    buildMarketScoutPlan: async () => ({
-      plan: { targets: [] },
-      telemetry: {
-        openAiCalls: 1,
-        promptChars: 300,
-        systemPromptChars: 700,
-        usedFallback: false,
-      },
-    }),
-    createOpenAIClient: async () => null,
-    paidRequestAdmission: admission(),
-    selectProducts: async ({ plan }) => {
-      await plan;
-      return {
-        result: { recommendations: [product] },
-        telemetry: {
-          assetCandidates: 1,
-          candidateFunnel: {
-            deduplicated: [],
-            discovered: [],
-            marketCompatible: [],
-            prefilterRejected: [],
-            prefiltered: [],
-            ranked: [],
-            returned: [],
-            verified: [],
-          },
-          candidatesAfterHardFilters: 1,
-          candidatesDiscovered: 3,
-          candidatesReturned: 1,
-          duplicateCandidatesRemoved: 0,
-          logicalSearchCalls: 3,
-          physicalSearchAttempts: 3,
-          queries: ["gaming monitor"],
-          rankedCandidates: [],
-          rejectedByAssetSafety: 0,
-          rejectedByAvailability: 0,
-          rejectedByMerchant: 0,
-          rejectedByRequirements: 0,
-          resolutionDiagnostics: [],
-          resolutionQueries: [],
-          searchDiagnostics: [],
-          verifiedCandidates: [],
-        },
-      };
-    },
+    createOpenAIClient: async () => ({ responses: { create: async () => { throw new Error("Mock research owns this request"); } } }),
+    paidRequestAdmission: { tryAcquire: () => ({ ok: true, release() {} }) },
+    researchProducts: async () => ({ result: { recommendations: [product] }, debug: { openAiCalls: 1, hostedSearchCalls: 3 } }),
+    enrichProductImages: async ({ products }) => ({ recommendations: products, debug: {} }),
     ...overrides,
   };
 }
-
-function request(body, headers = {}) {
-  return new Request("http://localhost/api/recommendations", {
-    body: JSON.stringify(body),
-    headers: { "content-type": "application/json", ...headers },
-    method: "POST",
-  });
+function request(body, headers = {}, signal) {
+  return new Request("http://localhost/api/recommendations", { method: "POST", body: JSON.stringify(body), headers: { "content-type": "application/json", ...headers }, signal });
 }
+let previousKey, previousSerperKey;
+beforeEach(() => {
+  previousKey = process.env.OPENAI_API_KEY; process.env.OPENAI_API_KEY = "test-only-key";
+  previousSerperKey = process.env.SERPER_API_KEY; process.env.SERPER_API_KEY = "test-only-image-key";
+});
+afterEach(() => {
+  if (previousKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = previousKey;
+  if (previousSerperKey === undefined) delete process.env.SERPER_API_KEY; else process.env.SERPER_API_KEY = previousSerperKey;
+});
 
-describe("selection-only recommendation API", () => {
-  it("exports only POST and returns the minimal product contract", async () => {
-    const response = await routeModule.createRecommendationPostHandler(
-      dependencies(),
-    )(
-      request({
-        query: "gaming monitor",
-        budget: "$500",
-        priorities: "27-inch 1440p at least 144Hz",
-      }),
-    );
-    const body = await response.json();
-
-    assert.equal(response.status, 200);
-    assert.deepEqual(body, { result: { recommendations: [product] } });
-    assert.equal("GET" in routeModule, false);
-    assert.equal("DELETE" in routeModule, false);
-    assert.equal(JSON.stringify(body).includes("citations"), false);
-    assert.equal(JSON.stringify(body).includes("why_recommended"), false);
+describe("single-request research API", () => {
+  it("reports only an allowlisted failure reason in requested local debug", async () => {
+    const handler = createRecommendationPostHandler(dependencies({ researchProducts: async () => { throw new ProductResearchError("timeout"); } }));
+    const local = await handler(request({ query: "coffee maker" }, { "x-reviewradar-debug": "true" }));
+    assert.equal(local.status, 502);
+    assert.equal((await local.json()).debug.failureReason, "timeout");
+    const normal = await handler(request({ query: "coffee maker" }));
+    assert.equal("debug" in await normal.json(), false);
   });
-
-  it("validates before planning or search", async () => {
+  it("returns names and links in research order with no commerce fields", async () => {
+    const products = [product, { name: "Another Brewer", productPageUrl: "https://example.com/another" }];
     let calls = 0;
-    const response = await routeModule.createRecommendationPostHandler(
-      dependencies({
-        buildMarketScoutPlan: async () => {
-          calls += 1;
-          throw new Error("must not run");
-        },
-        selectProducts: async () => {
-          calls += 1;
-          throw new Error("must not run");
-        },
-      }),
-    )(request({ query: "" }));
-
-    assert.equal(response.status, 400);
-    assert.equal(calls, 0);
-    assert.equal(typeof (await response.json()).error, "string");
-  });
-
-  it("rejects conflicting hard requirements before paid providers run", async () => {
-    let calls = 0;
-    const response = await routeModule.createRecommendationPostHandler(
-      dependencies({
-        buildMarketScoutPlan: async () => {
-          calls += 1;
-          throw new Error("must not run");
-        },
-      }),
-    )(
-      request({
-        query: "office chair",
-        budget: "$100",
-        priorities: "must be premium",
-      }),
-    );
-
-    assert.equal(response.status, 400);
-    assert.equal(calls, 0);
-    assert.match((await response.json()).error, /conflicting requirements/i);
-  });
-
-  it("returns a compact local debug envelope only when requested", async () => {
-    const response = await routeModule.createRecommendationPostHandler(
-      dependencies(),
-    )(
-      request(
-        { query: "gaming monitor" },
-        { "x-reviewradar-debug": "true" },
-      ),
-    );
-    const body = await response.json();
-
-    assert.equal(
-      body.debug.architecture,
-      "phase1_request_time_market_discovery",
-    );
-    assert.equal(body.debug.openAiCalls, 1);
-    assert.equal(body.debug.search.candidatesReturned, 1);
-    assert.equal("requirements" in body.debug, false);
-    assert.equal(JSON.stringify(body.debug).includes("citations"), false);
-  });
-
-  it("starts the market scout concurrently with product discovery", async () => {
-    let scoutStarted = false;
-    let markSelectionStarted;
-    const selectionStarted = new Promise((resolve) => {
-      markSelectionStarted = resolve;
-    });
-    const base = dependencies();
-    const response = await routeModule.createRecommendationPostHandler(
-      dependencies({
-        buildMarketScoutPlan: async (options) => {
-          scoutStarted = true;
-          assert.equal("commerceCandidates" in options, false);
-          await selectionStarted;
-          return {
-            plan: { targets: [] },
-            telemetry: { openAiCalls: 1, usedFallback: false },
-          };
-        },
-        selectProducts: async ({ plan }) => {
-          assert.equal(scoutStarted, true);
-          assert.notEqual(typeof plan, "function");
-          markSelectionStarted();
-          const resolvedPlan = await plan;
-          assert.deepEqual(resolvedPlan, { targets: [] });
-          return base.selectProducts({ plan: resolvedPlan });
-        },
-      }),
-    )(request({ query: "gaming monitor" }));
-
+    const response = await createRecommendationPostHandler(dependencies({ researchProducts: async () => {
+      calls++; return { result: { recommendations: products }, debug: { openAiCalls: 1 } };
+    }}))(request({ query: "coffee maker", budget: "$500" }));
     assert.equal(response.status, 200);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.deepEqual(await response.json(), { result: { recommendations: products } });
+    assert.equal(calls, 1);
+    assert.deepEqual(Object.keys(route).sort(), ["POST", "maxDuration", "runtime"]);
+  });
+  it("validates malformed input before research", async () => {
+    let calls = 0;
+    const response = await createRecommendationPostHandler(dependencies({ researchProducts: async () => { calls++; throw new Error(); } }))(request({ query: "" }));
+    assert.equal(response.status, 400); assert.equal(calls, 0);
+  });
+  it("passes budget and preferences as research guidance without the old price gates", async () => {
+    let observed;
+    const handler = createRecommendationPostHandler(dependencies({ researchProducts: async ({ input }) => {
+      observed = input; return { result: { recommendations: [product] }, debug: {} };
+    }}));
+    const response = await handler(request({ query: "office chair", budget: "$100", priorities: "prefer premium quality" }));
+    assert.equal(response.status, 200);
+    assert.equal(observed.budget, "$100"); assert.equal(observed.priorities, "prefer premium quality");
+    assert.equal("extractedRequirements" in observed, false);
+  });
+  it("requires configuration and never disguises failure as empty success", async () => {
+    delete process.env.OPENAI_API_KEY;
+    let called = false;
+    const missing = await createRecommendationPostHandler(dependencies({ researchProducts: async () => { called = true; throw new Error(); } }))(request({ query: "coffee maker" }));
+    assert.equal(missing.status, 503); assert.equal(called, false);
+    process.env.OPENAI_API_KEY = "test-only-key";
+    const failed = await createRecommendationPostHandler(dependencies({ researchProducts: async () => { throw new Error("secret provider payload"); } }))(request({ query: "coffee maker" }, { "x-reviewradar-debug": "true" }));
+    assert.equal(failed.status, 502); assert.equal(JSON.stringify(await failed.json()).includes("secret"), false);
+  });
+  it("releases admission on failure and returns cancellation distinctly", async () => {
+    let released = 0;
+    const response = await createRecommendationPostHandler(dependencies({
+      paidRequestAdmission: { tryAcquire: () => ({ ok: true, release() { released++; } }) },
+      researchProducts: async () => { throw new RequestCancelledError(); },
+    }))(request({ query: "coffee maker" }));
+    assert.equal(response.status, 499); assert.equal(released, 1);
+  });
+  it("rejects saturated work before research", async () => {
+    let called = false;
+    const response = await createRecommendationPostHandler(dependencies({
+      paidRequestAdmission: { tryAcquire: () => ({ ok: false, retryAfterSeconds: 7 }) },
+      researchProducts: async () => { called = true; throw new Error(); },
+    }))(request({ query: "coffee maker" }));
+    assert.equal(response.status, 429); assert.equal(response.headers.get("retry-after"), "7"); assert.equal(called, false);
+  });
+  it("keeps debug out of the public envelope and provides bounded local counters", async () => {
+    const response = await createRecommendationPostHandler(dependencies())(request({ query: "coffee maker" }, { "x-reviewradar-debug": "true" }));
+    const body = await response.json();
+    assert.equal(body.debug.architecture, "single_request_product_research"); assert.equal(body.debug.openAiCalls, 1);
+    assert.equal("search" in body.debug, false);
   });
 
-  it("builds fresh request-bound research for unrelated searches", async () => {
-    const scoutedQueries = [];
-    const selectedPlans = [];
-    const handler = routeModule.createRecommendationPostHandler(
-      dependencies({
-        buildMarketScoutPlan: async ({ input }) => {
-          scoutedQueries.push(input.query);
-          return {
-            plan: {
-              targets: [
-                {
-                  aliases: [],
-                  brand: input.query === "robot vacuum" ? "Alpha" : "Beta",
-                  consensusOrder: 0,
-                  evidenceTier: "supported",
-                  model: input.query === "robot vacuum" ? "A100" : "B200",
-                  sourceUrls: ["https://example.com/current-request-source"],
-                },
-              ],
-            },
-            telemetry: { openAiCalls: 1, usedFallback: false },
-          };
-        },
-        selectProducts: async ({ input, plan }) => {
-          const resolvedPlan = await plan;
-          selectedPlans.push({ query: input.query, plan: resolvedPlan });
-          return dependencies().selectProducts({ plan: resolvedPlan });
-        },
-      }),
-    );
-
-    const first = await handler(request({ query: "robot vacuum" }));
-    const second = await handler(request({ query: "drip coffee maker" }));
-
-    assert.equal(first.status, 200);
-    assert.equal(second.status, 200);
-    assert.deepEqual(scoutedQueries, ["robot vacuum", "drip coffee maker"]);
-    assert.deepEqual(
-      selectedPlans.map(({ query, plan }) => ({
-        model: plan.targets[0].model,
-        query,
-      })),
-      [
-        { model: "A100", query: "robot vacuum" },
-        { model: "B200", query: "drip coffee maker" },
-      ],
-    );
+  it("adds optional images after research without changing the five selections or their order", async () => {
+    const products = Array.from({ length: 5 }, (_, i) => ({ name: `Example Brewer X${i}`, productPageUrl: `https://example.com/x${i}` }));
+    let calls = 0, researched = false;
+    const response = await createRecommendationPostHandler(dependencies({
+      researchProducts: async () => { researched = true; return { result: { recommendations: products }, debug: { openAiCalls: 1 } }; },
+      enrichProductImages: options => enrichProductImages({ ...options, fetchImpl: async (_, init) => {
+        assert.equal(researched, true); assert.equal(init.headers["X-API-KEY"], "test-only-image-key");
+        const index = calls++;
+        if (index === 1) return new Response("provider error", { status: 500 });
+        const row = { title: index === 3 ? "Other Brewer" : products[index].name, link: products[index].productPageUrl,
+          imageUrl: `https://encrypted-tbn0.gstatic.com/shopping?q=tbn:${index}` };
+        return Response.json({ shopping: [row] });
+      } }),
+    }))(request({ query: "coffee maker" }, { "x-reviewradar-debug": "true" }));
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(calls, 5);
+    assert.deepEqual(body.result.recommendations.map(({ name, productPageUrl }) => ({ name, productPageUrl })), products);
+    assert.equal(body.result.recommendations.filter(item => item.image).length, 3);
+    assert.equal(body.debug.openAiCalls, 1); assert.equal(body.debug.imageMatches, 3);
+    assert.equal(body.debug.imageErrors, 1); assert.equal(body.debug.imageNoMatches, 1);
+    assert.equal(JSON.stringify(body).includes("test-only"), false);
   });
 
-  it("returns an error instead of a false empty result when every Shopping search fails", async () => {
-    const failedSearch = {
-      errorKind: "api_error",
-      query: "gaming monitor",
-      rawShoppingResults: 0,
-      rejectionReasons: {},
-      returnedCandidates: 0,
-    };
-    const response = await routeModule.createRecommendationPostHandler(
-      dependencies({
-        selectProducts: async () => ({
-          result: { recommendations: [] },
-          telemetry: {
-            assetCandidates: 0,
-            candidatesAfterHardFilters: 0,
-            candidatesDiscovered: 0,
-            candidatesReturned: 0,
-            duplicateCandidatesRemoved: 0,
-            logicalSearchCalls: 3,
-            physicalSearchAttempts: 3,
-            queries: ["gaming monitor", "27 inch gaming monitor", "QHD monitor"],
-            rankedCandidates: [],
-            rejectedByAssetSafety: 0,
-            rejectedByAvailability: 0,
-            rejectedByMerchant: 0,
-            rejectedByRequirements: 0,
-            resolutionDiagnostics: [],
-            resolutionQueries: [],
-            searchDiagnostics: [failedSearch, failedSearch, failedSearch],
-            verifiedCandidates: [],
-          },
-        }),
-      }),
-    )(request({ query: "gaming monitor" }));
-
-    assert.equal(response.status, 502);
-    assert.match((await response.json()).error, /temporarily unavailable/i);
+  it("preserves successful research if the optional image step unexpectedly throws", async () => {
+    const response = await createRecommendationPostHandler(dependencies({
+      enrichProductImages: async () => { throw new Error("private provider details"); },
+    }))(request({ query: "coffee maker" }));
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { result: { recommendations: [product] } });
   });
 
-  it("rejects saturated paid-work admission without planning", async () => {
-    let planned = false;
-    const response = await routeModule.createRecommendationPostHandler(
-      dependencies({
-        paidRequestAdmission: {
-          tryAcquire() {
-            return { ok: false, retryAfterSeconds: 7 };
-          },
-        },
-        buildMarketScoutPlan: async () => {
-          planned = true;
-          throw new Error("must not run");
-        },
-      }),
-    )(request({ query: "gaming monitor" }));
-
-    assert.equal(response.status, 429);
-    assert.equal(response.headers.get("retry-after"), "7");
-    assert.equal(planned, false);
+  it("cancels during image lookup and releases the admission slot", async () => {
+    const controller = new AbortController(); let released = 0;
+    const response = await createRecommendationPostHandler(dependencies({
+      paidRequestAdmission: { tryAcquire: () => ({ ok: true, release() { released++; } }) },
+      enrichProductImages: async () => { controller.abort(); throw new RequestCancelledError(); },
+    }))(request({ query: "coffee maker" }, {}, controller.signal));
+    assert.equal(response.status, 499); assert.equal(released, 1);
   });
 });

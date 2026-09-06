@@ -215,16 +215,6 @@ const concreteRequiredFeatureValues = Array.from(
   new Set([...baseConcreteRequiredFeatureValues, ...requiredSemanticFeatureValues]),
 );
 
-const negativePhrases = [
-  "avoid",
-  "do not want",
-  "don't want",
-  "dont want",
-  "no ",
-  "not ",
-  "without",
-];
-
 let idCounter = 0;
 
 function nextId(prefix: string) {
@@ -413,7 +403,7 @@ export function getPremiumCap(
   return Math.round(Math.min(budgetAmount * multiplier, budgetAmount + allowance));
 }
 
-function parseBudgetRule(input: RecommendationApiRequest): BudgetRule | null {
+export function parseBudgetRule(input: RecommendationApiRequest): BudgetRule | null {
   // Budget ranges ("between $500 and $700", "$500-$700") use the upper bound
   // as the firm limit so in-range products are not wrongly rejected.
   const amount =
@@ -1378,14 +1368,9 @@ export function extractStructuredRequirements(
   }
 
   for (const item of detailClassifications.ambiguous) {
-    const normalized = normalizeText(item.value);
-    const isProbablyNegative = negativePhrases.some((phrase) =>
-      normalized.includes(normalizeText(phrase)),
-    );
-
-    if (isProbablyNegative) {
-      addUnique(avoidConstraints, item);
-    } else if (preferAmbiguousDetails) {
+    // Explicit exclusions were already parsed with word boundaries. Rechecking
+    // substrings here would turn ordinary words such as "noise" into "no".
+    if (preferAmbiguousDetails) {
       addUnique(preferredConstraints, { ...item, strictness: "soft" });
     } else {
       addUnique(ambiguousConstraints, item);

@@ -6,7 +6,6 @@ const mockResult = {
   recommendations: [
     {
       name: "Example Vacuum X1",
-      category: "cordless vacuum", imageUrl: null, price: { amount: 199.99, currency: "USD" },
       productPageUrl: "https://example.com/products/vacuum-x1",
     },
   ],
@@ -226,8 +225,11 @@ for (const viewport of [
     const products = Array.from({ length: 5 }, (_, index) => ({
       name: `Example Headphones X${index + 1}`,
       productPageUrl: `https://example.com/headphones/x${index + 1}`,
-      category: "headphones", price: null,
-      imageUrl: index < 3 ? `https://encrypted-tbn0.gstatic.com/shopping?q=tbn:${index}` : null,
+      ...(index < 3 ? { image: {
+        url: `https://encrypted-tbn0.gstatic.com/shopping?q=tbn:${index}`,
+        sourceUrl: `https://example.com/headphones/x${index + 1}`,
+        sourceTitle: `Example Headphones X${index + 1}`,
+      } } : {}),
     }));
     const imageRequests: string[] = [];
     await page.route(/^https:\/\/encrypted-tbn0\.gstatic\.com\/shopping\?/, async route => {
@@ -251,7 +253,7 @@ for (const viewport of [
       await expect(card.getByRole("link")).toHaveAttribute("href", product.productPageUrl);
       if (index < 2) {
         const image = card.getByRole("img", { name: product.name, exact: true });
-        await expect(image).toHaveAttribute("src", product.imageUrl!);
+        await expect(image).toHaveAttribute("src", product.image!.url);
         await expect(image).toHaveAttribute("referrerpolicy", "no-referrer");
         await expect.poll(() => image.evaluate(node => (node as HTMLImageElement).naturalWidth)).toBe(1);
       } else {
